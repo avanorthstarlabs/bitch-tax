@@ -89,7 +89,7 @@ export default function LaunchVault() {
         </div>
       </div>
 
-      <style jsx>{`
+      <style>{`
         @keyframes progress-shine {
           0% { background-position: 0 0; }
           100% { background-position: 60px 0; }
