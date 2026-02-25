@@ -90,34 +90,6 @@ export default function TaxVisualizer({ feeBps }: TaxVisualizerProps) {
           filter="url(#gauge-glow)"
         />
 
-        {/* The Speedometer Needle */}
-        <motion.g
-          initial={{ rotate: 0 }}
-          animate={{ rotate: needleRotation }}
-          transition={{ duration: 2, ease: "circOut" }}
-          style={{ transformOrigin: '100px 100px' }}
-        >
-          {/* Main Needle Line */}
-          <line
-            x1="100" y1="100"
-            x2="185" y2="100"
-            stroke={color}
-            strokeWidth="2"
-            strokeLinecap="round"
-            filter="url(#gauge-glow)"
-          />
-          {/* Needle Base Circle */}
-          <circle cx="100" cy="100" r="4" fill={color} filter="url(#gauge-glow)" />
-          {/* Small inner detail on needle */}
-          <line
-            x1="160" y1="100"
-            x2="180" y2="100"
-            stroke="white"
-            strokeWidth="1"
-            strokeOpacity="0.5"
-          />
-        </motion.g>
-
         {/* Subtle scanning effect behind needle */}
         <motion.path
           d={`M 100 100 L 185 100 A 85 85 0 0 1 ${100 + 85 * Math.cos(10 * Math.PI / 180)} ${100 + 85 * Math.sin(10 * Math.PI / 180)} Z`}
@@ -125,8 +97,38 @@ export default function TaxVisualizer({ feeBps }: TaxVisualizerProps) {
           fillOpacity="0.05"
           animate={{ rotate: needleRotation }}
           transition={{ duration: 2, ease: "circOut" }}
-          style={{ transformOrigin: '100px 100px' }}
+          style={{ transformOrigin: '50% 50%' }}
         />
+
+        {/* The Speedometer Needle */}
+        <motion.g
+          initial={{ rotate: 0 }}
+          animate={{ rotate: needleRotation }}
+          transition={{ duration: 2, ease: "circOut" }}
+          style={{ transformOrigin: '50% 50%' }}
+        >
+          {/* Needle shaft */}
+          <line
+            x1="100" y1="100"
+            x2="182" y2="100"
+            stroke={color}
+            strokeWidth="2.5"
+            strokeLinecap="round"
+            filter="url(#gauge-glow)"
+          />
+          {/* Bright tip */}
+          <line
+            x1="168" y1="100"
+            x2="182" y2="100"
+            stroke="white"
+            strokeWidth="1.5"
+            strokeLinecap="round"
+            strokeOpacity="0.9"
+          />
+          {/* Needle base hub */}
+          <circle cx="100" cy="100" r="5" fill={color} filter="url(#gauge-glow)" />
+          <circle cx="100" cy="100" r="2.5" fill="white" opacity="0.6" />
+        </motion.g>
       </svg>
 
       {/* Center Display Data */}
