@@ -132,9 +132,18 @@ export default function TaxVisualizer({ feeBps }: TaxVisualizerProps) {
           strokeOpacity="0.9"
         />
 
-        {/* Hub */}
-        <circle cx="100" cy="100" r="5" fill={color} filter="url(#gauge-glow)" />
-        <circle cx="100" cy="100" r="2.5" fill="white" opacity="0.7" />
+        {/* Tail connecting needle to hub */}
+        <line
+          x1="100" y1="100"
+          x2="142.5" y2="57.5"
+          stroke={color}
+          strokeWidth="1.5"
+          strokeOpacity="0.4"
+          strokeLinecap="round"
+        />
+        {/* Hub — at gap center (midpoint of arc endpoints, appears at visual bottom) */}
+        <circle cx="142.5" cy="57.5" r="5" fill={color} filter="url(#gauge-glow)" />
+        <circle cx="142.5" cy="57.5" r="2.5" fill="white" opacity="0.7" />
       </svg>
 
       {/* Center Display Data */}
