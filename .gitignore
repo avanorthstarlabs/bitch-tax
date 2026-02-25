@@ -9,7 +9,7 @@ out/
 build/
 
 # Keys & Secrets (CRITICAL)
-*.json
+!vercel.json
 *.key
 *.pem
 .env
