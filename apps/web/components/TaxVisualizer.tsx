@@ -34,25 +34,29 @@ export default function TaxVisualizer({ feeBps }: TaxVisualizerProps) {
     return controls.stop;
   }, [needleAngleDeg]);
 
-  // Pivot lives at the arc center — this is the correct needle origin
-  const PIVOT_X = 100;
-  const PIVOT_Y = 100;
+  // Hub lives at the visual bottom of the gap — midpoint of the two arc endpoints.
+  // Both endpoints are exactly 60.1 units away, so a fixed-length needle always
+  // reaches the arc at 0% and 33.3% and sweeps a clean semicircle in between.
+  const HUB_X = 142.5;
+  const HUB_Y = 57.5;
+  const NEEDLE_LEN = 60;
 
-  // Arc point at current angle — the needle aims HERE
-  const arcX = useTransform(angleValue, v => 100 + 85 * Math.cos(v * Math.PI / 180));
-  const arcY = useTransform(angleValue, v => 100 + 85 * Math.sin(v * Math.PI / 180));
+  // Hub-based angle: sweeps from 45° (pointing at arc start) to 225° (arc end)
+  // as angleValue goes 0→270.  Formula: hubAngle = 45 + arcAngle * (2/3)
+  const hubAngleDeg = useTransform(angleValue, v => 45 + v * (2 / 3));
 
-  // Needle goes FROM pivot TOWARD arc — shaft stops at 90%, white tip covers last 28%
-  const shaftX2 = useTransform(arcX, ax => PIVOT_X + 0.90 * (ax - PIVOT_X));
-  const shaftY2 = useTransform(arcY, ay => PIVOT_Y + 0.90 * (ay - PIVOT_Y));
-  const tipX1   = useTransform(arcX, ax => PIVOT_X + 0.62 * (ax - PIVOT_X));
-  const tipY1   = useTransform(arcY, ay => PIVOT_Y + 0.62 * (ay - PIVOT_Y));
+  // Shaft tip at 88% of needle length — stops just inside the arc stroke
+  const shaftX2 = useTransform(hubAngleDeg, a => HUB_X + NEEDLE_LEN * 0.88 * Math.cos(a * Math.PI / 180));
+  const shaftY2 = useTransform(hubAngleDeg, a => HUB_Y + NEEDLE_LEN * 0.88 * Math.sin(a * Math.PI / 180));
+  // White tip starts at 58% of needle length
+  const tipX1   = useTransform(hubAngleDeg, a => HUB_X + NEEDLE_LEN * 0.58 * Math.cos(a * Math.PI / 180));
+  const tipY1   = useTransform(hubAngleDeg, a => HUB_Y + NEEDLE_LEN * 0.58 * Math.sin(a * Math.PI / 180));
 
-  // Scan fan from pivot
-  const scanPath = useTransform(angleValue, v => {
-    const end = v + 12;
-    const r = 55;
-    return `M ${PIVOT_X} ${PIVOT_Y} L ${PIVOT_X + r * Math.cos(v * Math.PI / 180)} ${PIVOT_Y + r * Math.sin(v * Math.PI / 180)} A ${r} ${r} 0 0 1 ${PIVOT_X + r * Math.cos(end * Math.PI / 180)} ${PIVOT_Y + r * Math.sin(end * Math.PI / 180)} Z`;
+  // Scan fan radiates from hub
+  const scanPath = useTransform(hubAngleDeg, a => {
+    const end = a + 12;
+    const r = 38;
+    return `M ${HUB_X} ${HUB_Y} L ${HUB_X + r * Math.cos(a * Math.PI / 180)} ${HUB_Y + r * Math.sin(a * Math.PI / 180)} A ${r} ${r} 0 0 1 ${HUB_X + r * Math.cos(end * Math.PI / 180)} ${HUB_Y + r * Math.sin(end * Math.PI / 180)} Z`;
   });
 
   return (
@@ -122,9 +126,9 @@ export default function TaxVisualizer({ feeBps }: TaxVisualizerProps) {
         {/* Scan fan — computed directly, no rotation transform */}
         <motion.path d={scanPath} fill={color} fillOpacity="0.06" />
 
-        {/* Needle shaft */}
+        {/* Needle shaft — pivots from hub at gap bottom */}
         <motion.line
-          x1={100} y1={100}
+          x1={HUB_X} y1={HUB_Y}
           x2={shaftX2} y2={shaftY2}
           stroke={color}
           strokeWidth="2.5"
@@ -142,9 +146,9 @@ export default function TaxVisualizer({ feeBps }: TaxVisualizerProps) {
           strokeOpacity="0.9"
         />
 
-        {/* Hub — at arc center, true needle pivot */}
-        <circle cx="100" cy="100" r="5" fill={color} filter="url(#gauge-glow)" />
-        <circle cx="100" cy="100" r="2.5" fill="white" opacity="0.7" />
+        {/* Hub — at gap bottom, needle pivot */}
+        <circle cx={HUB_X} cy={HUB_Y} r="5" fill={color} filter="url(#gauge-glow)" />
+        <circle cx={HUB_X} cy={HUB_Y} r="2.5" fill="white" opacity="0.7" />
       </svg>
 
       {/* Center Display Data */}
