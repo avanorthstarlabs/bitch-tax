@@ -1,0 +1,63 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --foreground-rgb: 238, 238, 238;
+  --background-start-rgb: 5, 5, 5;
+  --background-end-rgb: 0, 0, 0;
+}
+
+body {
+  color: rgb(var(--foreground-rgb));
+  background: linear-gradient(
+      to bottom,
+      transparent,
+      rgb(var(--background-end-rgb))
+    )
+    rgb(var(--background-start-rgb));
+  font-family: var(--font-jetbrains), monospace;
+  overflow-x: hidden;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #111;
+}
+::-webkit-scrollbar-thumb {
+  background: #39ff14;
+  border-radius: 4px;
+}
+
+/* Neon Glow Effects */
+.text-glow {
+  text-shadow: 0 0 10px rgba(57, 255, 20, 0.5), 0 0 20px rgba(57, 255, 20, 0.3);
+}
+.text-glow-red {
+  text-shadow: 0 0 10px rgba(255, 15, 91, 0.5), 0 0 20px rgba(255, 15, 91, 0.3);
+}
+
+.box-glow {
+  box-shadow: 0 0 15px rgba(57, 255, 20, 0.15);
+  border: 1px solid rgba(57, 255, 20, 0.3);
+}
+
+/* Grid Background Animation */
+.bg-grid {
+  background-size: 40px 40px;
+  background-image: linear-gradient(to right, #111 1px, transparent 1px),
+    linear-gradient(to bottom, #111 1px, transparent 1px);
+  mask-image: linear-gradient(to bottom, black 60%, transparent 100%);
+}
+
+.animate-pulse-slow {
+  animation: pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: .5; }
+}
