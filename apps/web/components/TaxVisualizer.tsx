@@ -34,25 +34,25 @@ export default function TaxVisualizer({ feeBps }: TaxVisualizerProps) {
     return controls.stop;
   }, [needleAngleDeg]);
 
-  // Hub lives at the visual bottom of the gap (midpoint between arc endpoints in SVG space)
-  const HUB_X = 142.5;
-  const HUB_Y = 57.5;
+  // Pivot lives at the arc center — this is the correct needle origin
+  const PIVOT_X = 100;
+  const PIVOT_Y = 100;
 
   // Arc point at current angle — the needle aims HERE
   const arcX = useTransform(angleValue, v => 100 + 85 * Math.cos(v * Math.PI / 180));
   const arcY = useTransform(angleValue, v => 100 + 85 * Math.sin(v * Math.PI / 180));
 
-  // Needle goes FROM hub TOWARD arc — shaft stops at 90%, white tip is last 30%
-  const shaftX2 = useTransform(arcX, ax => HUB_X + 0.90 * (ax - HUB_X));
-  const shaftY2 = useTransform(arcY, ay => HUB_Y + 0.90 * (ay - HUB_Y));
-  const tipX1   = useTransform(arcX, ax => HUB_X + 0.62 * (ax - HUB_X));
-  const tipY1   = useTransform(arcY, ay => HUB_Y + 0.62 * (ay - HUB_Y));
+  // Needle goes FROM pivot TOWARD arc — shaft stops at 90%, white tip covers last 28%
+  const shaftX2 = useTransform(arcX, ax => PIVOT_X + 0.90 * (ax - PIVOT_X));
+  const shaftY2 = useTransform(arcY, ay => PIVOT_Y + 0.90 * (ay - PIVOT_Y));
+  const tipX1   = useTransform(arcX, ax => PIVOT_X + 0.62 * (ax - PIVOT_X));
+  const tipY1   = useTransform(arcY, ay => PIVOT_Y + 0.62 * (ay - PIVOT_Y));
 
-  // Scan fan from hub
+  // Scan fan from pivot
   const scanPath = useTransform(angleValue, v => {
     const end = v + 12;
     const r = 55;
-    return `M ${HUB_X} ${HUB_Y} L ${HUB_X + r * Math.cos(v * Math.PI / 180)} ${HUB_Y + r * Math.sin(v * Math.PI / 180)} A ${r} ${r} 0 0 1 ${HUB_X + r * Math.cos(end * Math.PI / 180)} ${HUB_Y + r * Math.sin(end * Math.PI / 180)} Z`;
+    return `M ${PIVOT_X} ${PIVOT_Y} L ${PIVOT_X + r * Math.cos(v * Math.PI / 180)} ${PIVOT_Y + r * Math.sin(v * Math.PI / 180)} A ${r} ${r} 0 0 1 ${PIVOT_X + r * Math.cos(end * Math.PI / 180)} ${PIVOT_Y + r * Math.sin(end * Math.PI / 180)} Z`;
   });
 
   return (
@@ -142,9 +142,9 @@ export default function TaxVisualizer({ feeBps }: TaxVisualizerProps) {
           strokeOpacity="0.9"
         />
 
-        {/* Hub — at gap center (midpoint of arc endpoints, appears at visual bottom) */}
-        <circle cx="142.5" cy="57.5" r="5" fill={color} filter="url(#gauge-glow)" />
-        <circle cx="142.5" cy="57.5" r="2.5" fill="white" opacity="0.7" />
+        {/* Hub — at arc center, true needle pivot */}
+        <circle cx="100" cy="100" r="5" fill={color} filter="url(#gauge-glow)" />
+        <circle cx="100" cy="100" r="2.5" fill="white" opacity="0.7" />
       </svg>
 
       {/* Center Display Data */}
