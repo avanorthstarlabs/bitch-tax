@@ -1,0 +1,22 @@
+{
+  "name": "fee-decay-launcher",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "distribute": "npx ts-node apps/admin-cli/src/distribute.ts"
+  },
+  "devDependencies": {
+    "@types/bn.js": "^5.2.0",
+    "@types/node": "^20.0.0",
+    "supabase": "^2.76.14",
+    "ts-node": "^10.9.1",
+    "typescript": "^5.0.0"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.97.0",
+    "dotenv": "^17.3.1"
+  }
+}
