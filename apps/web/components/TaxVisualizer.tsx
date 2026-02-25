@@ -34,15 +34,25 @@ export default function TaxVisualizer({ feeBps }: TaxVisualizerProps) {
     return controls.stop;
   }, [needleAngleDeg]);
 
-  // Derive needle endpoints directly from angle (trig beats transform-origin every time)
-  const shaftX2  = useTransform(angleValue, v => 100 + 80 * Math.cos(v * Math.PI / 180));
-  const shaftY2  = useTransform(angleValue, v => 100 + 80 * Math.sin(v * Math.PI / 180));
-  const tipX1    = useTransform(angleValue, v => 100 + 62 * Math.cos(v * Math.PI / 180));
-  const tipY1    = useTransform(angleValue, v => 100 + 62 * Math.sin(v * Math.PI / 180));
+  // Hub lives at the visual bottom of the gap (midpoint between arc endpoints in SVG space)
+  const HUB_X = 142.5;
+  const HUB_Y = 57.5;
+
+  // Arc point at current angle — the needle aims HERE
+  const arcX = useTransform(angleValue, v => 100 + 85 * Math.cos(v * Math.PI / 180));
+  const arcY = useTransform(angleValue, v => 100 + 85 * Math.sin(v * Math.PI / 180));
+
+  // Needle goes FROM hub TOWARD arc — shaft stops at 90%, white tip is last 30%
+  const shaftX2 = useTransform(arcX, ax => HUB_X + 0.90 * (ax - HUB_X));
+  const shaftY2 = useTransform(arcY, ay => HUB_Y + 0.90 * (ay - HUB_Y));
+  const tipX1   = useTransform(arcX, ax => HUB_X + 0.62 * (ax - HUB_X));
+  const tipY1   = useTransform(arcY, ay => HUB_Y + 0.62 * (ay - HUB_Y));
+
+  // Scan fan from hub
   const scanPath = useTransform(angleValue, v => {
     const end = v + 12;
-    const r = 82;
-    return `M 100 100 L ${100 + r * Math.cos(v * Math.PI / 180)} ${100 + r * Math.sin(v * Math.PI / 180)} A ${r} ${r} 0 0 1 ${100 + r * Math.cos(end * Math.PI / 180)} ${100 + r * Math.sin(end * Math.PI / 180)} Z`;
+    const r = 55;
+    return `M ${HUB_X} ${HUB_Y} L ${HUB_X + r * Math.cos(v * Math.PI / 180)} ${HUB_Y + r * Math.sin(v * Math.PI / 180)} A ${r} ${r} 0 0 1 ${HUB_X + r * Math.cos(end * Math.PI / 180)} ${HUB_Y + r * Math.sin(end * Math.PI / 180)} Z`;
   });
 
   return (
@@ -132,15 +142,6 @@ export default function TaxVisualizer({ feeBps }: TaxVisualizerProps) {
           strokeOpacity="0.9"
         />
 
-        {/* Tail connecting needle to hub */}
-        <line
-          x1="100" y1="100"
-          x2="142.5" y2="57.5"
-          stroke={color}
-          strokeWidth="1.5"
-          strokeOpacity="0.4"
-          strokeLinecap="round"
-        />
         {/* Hub — at gap center (midpoint of arc endpoints, appears at visual bottom) */}
         <circle cx="142.5" cy="57.5" r="5" fill={color} filter="url(#gauge-glow)" />
         <circle cx="142.5" cy="57.5" r="2.5" fill="white" opacity="0.7" />
