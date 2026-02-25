@@ -1,6 +1,7 @@
 'use client';
 
-import { motion } from 'framer-motion';
+import { motion, useMotionValue, useTransform, animate } from 'framer-motion';
+import { useEffect } from 'react';
 
 interface TaxVisualizerProps {
   feeBps: number; // e.g. 3330 for 33.3%
@@ -10,28 +11,47 @@ export default function TaxVisualizer({ feeBps }: TaxVisualizerProps) {
   const percentage = feeBps / 100;
   const isPanic = percentage > 10;
   const isGrace = percentage <= 10 && percentage > 5;
-  
+
   const color = isPanic ? '#ff0f5b' : isGrace ? '#ffbe0b' : '#39ff14';
-  
-  // Meter configuration
+
+  // Arc config: 270 degrees of the circle
   const radius = 85;
   const circumference = 2 * Math.PI * radius;
-  // We only show ~270 degrees of the circle for a gauge look
-  const gap = 0.25; 
+  const gap = 0.25;
   const totalLength = circumference * (1 - gap);
   const offset = totalLength - (percentage / 33.3) * totalLength;
 
-  // Speedometer Needle Logic
-  // The arc is 270 degrees.
-  const needleRotation = (percentage / 33.3) * 270;
+  // Needle angle: 0° = arc start (right in SVG), 270° = arc end (up in SVG)
+  const needleAngleDeg = (percentage / 33.3) * 270;
+
+  // Animate a single angle value — no CSS rotation, no transform-origin issues
+  const angleValue = useMotionValue(0);
+  useEffect(() => {
+    const controls = animate(angleValue, needleAngleDeg, {
+      duration: 2,
+      ease: [0.23, 1, 0.32, 1],
+    });
+    return controls.stop;
+  }, [needleAngleDeg]);
+
+  // Derive needle endpoints directly from angle (trig beats transform-origin every time)
+  const shaftX2  = useTransform(angleValue, v => 100 + 80 * Math.cos(v * Math.PI / 180));
+  const shaftY2  = useTransform(angleValue, v => 100 + 80 * Math.sin(v * Math.PI / 180));
+  const tipX1    = useTransform(angleValue, v => 100 + 62 * Math.cos(v * Math.PI / 180));
+  const tipY1    = useTransform(angleValue, v => 100 + 62 * Math.sin(v * Math.PI / 180));
+  const scanPath = useTransform(angleValue, v => {
+    const end = v + 12;
+    const r = 82;
+    return `M 100 100 L ${100 + r * Math.cos(v * Math.PI / 180)} ${100 + r * Math.sin(v * Math.PI / 180)} A ${r} ${r} 0 0 1 ${100 + r * Math.cos(end * Math.PI / 180)} ${100 + r * Math.sin(end * Math.PI / 180)} Z`;
+  });
 
   return (
     <div className="relative w-80 h-80 flex items-center justify-center">
-      
+
       {/* Dynamic Glow Backdrop */}
-      <div 
+      <div
         className="absolute inset-0 rounded-full blur-[80px] opacity-10 transition-colors duration-1000"
-        style={{ backgroundColor: color }} 
+        style={{ backgroundColor: color }}
       />
 
       <svg className="w-full h-full -rotate-[225deg]" viewBox="0 0 200 200">
@@ -40,7 +60,6 @@ export default function TaxVisualizer({ feeBps }: TaxVisualizerProps) {
             <feGaussianBlur stdDeviation="2" result="blur" />
             <feComposite in="SourceGraphic" in2="blur" operator="over" />
           </filter>
-          
           <linearGradient id="gauge-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
             <stop offset="0%" stopColor="#333" />
             <stop offset="50%" stopColor={color} />
@@ -66,7 +85,7 @@ export default function TaxVisualizer({ feeBps }: TaxVisualizerProps) {
           );
         })}
 
-        {/* Static Background Path */}
+        {/* Static Background Arc */}
         <circle
           cx="100" cy="100" r={radius}
           fill="none"
@@ -76,7 +95,7 @@ export default function TaxVisualizer({ feeBps }: TaxVisualizerProps) {
           strokeLinecap="round"
         />
 
-        {/* Dynamic Progress Path */}
+        {/* Dynamic Progress Arc */}
         <motion.circle
           cx="100" cy="100" r={radius}
           fill="none"
@@ -90,52 +109,38 @@ export default function TaxVisualizer({ feeBps }: TaxVisualizerProps) {
           filter="url(#gauge-glow)"
         />
 
-        {/* Subtle scanning effect behind needle */}
-        <motion.path
-          d={`M 100 100 L 185 100 A 85 85 0 0 1 ${100 + 85 * Math.cos(10 * Math.PI / 180)} ${100 + 85 * Math.sin(10 * Math.PI / 180)} Z`}
-          fill={color}
-          fillOpacity="0.05"
-          animate={{ rotate: needleRotation }}
-          transition={{ duration: 2, ease: "circOut" }}
-          style={{ transformOrigin: '50% 50%' }}
+        {/* Scan fan — computed directly, no rotation transform */}
+        <motion.path d={scanPath} fill={color} fillOpacity="0.06" />
+
+        {/* Needle shaft */}
+        <motion.line
+          x1={100} y1={100}
+          x2={shaftX2} y2={shaftY2}
+          stroke={color}
+          strokeWidth="2.5"
+          strokeLinecap="round"
+          filter="url(#gauge-glow)"
         />
 
-        {/* The Speedometer Needle */}
-        <motion.g
-          initial={{ rotate: 0 }}
-          animate={{ rotate: needleRotation }}
-          transition={{ duration: 2, ease: "circOut" }}
-          style={{ transformOrigin: '50% 50%' }}
-        >
-          {/* Needle shaft */}
-          <line
-            x1="100" y1="100"
-            x2="182" y2="100"
-            stroke={color}
-            strokeWidth="2.5"
-            strokeLinecap="round"
-            filter="url(#gauge-glow)"
-          />
-          {/* Bright tip */}
-          <line
-            x1="168" y1="100"
-            x2="182" y2="100"
-            stroke="white"
-            strokeWidth="1.5"
-            strokeLinecap="round"
-            strokeOpacity="0.9"
-          />
-          {/* Needle base hub */}
-          <circle cx="100" cy="100" r="5" fill={color} filter="url(#gauge-glow)" />
-          <circle cx="100" cy="100" r="2.5" fill="white" opacity="0.6" />
-        </motion.g>
+        {/* Bright white tip */}
+        <motion.line
+          x1={tipX1} y1={tipY1}
+          x2={shaftX2} y2={shaftY2}
+          stroke="white"
+          strokeWidth="1.5"
+          strokeLinecap="round"
+          strokeOpacity="0.9"
+        />
+
+        {/* Hub */}
+        <circle cx="100" cy="100" r="5" fill={color} filter="url(#gauge-glow)" />
+        <circle cx="100" cy="100" r="2.5" fill="white" opacity="0.7" />
       </svg>
 
       {/* Center Display Data */}
       <div className="absolute inset-0 flex flex-col items-center justify-center">
-        
-        {/* Label Top */}
-        <motion.div 
+
+        <motion.div
           className="text-[10px] font-mono tracking-[0.4em] uppercase opacity-40 mb-1"
           animate={{ opacity: [0.2, 0.5, 0.2] }}
           transition={{ duration: 2, repeat: Infinity }}
@@ -143,21 +148,19 @@ export default function TaxVisualizer({ feeBps }: TaxVisualizerProps) {
           Protocol Active
         </motion.div>
 
-        {/* Main Percentage */}
         <div className="relative">
-          <motion.span 
+          <motion.span
             className="text-6xl font-display font-black text-white text-glow block"
             initial={{ scale: 0.9, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
           >
             {percentage.toFixed(1)}<span className="text-2xl text-neon-green ml-1">%</span>
           </motion.span>
-          
-          {/* Status Label Bottom */}
+
           <div className="mt-[-4px] flex items-center justify-center gap-2">
-            <span 
-              className="w-1.5 h-1.5 rounded-full animate-pulse" 
-              style={{ backgroundColor: color }} 
+            <span
+              className="w-1.5 h-1.5 rounded-full animate-pulse"
+              style={{ backgroundColor: color }}
             />
             <span className="text-xs font-mono font-bold uppercase tracking-widest" style={{ color }}>
               {isPanic ? 'PANIC TAX' : isGrace ? 'GRACE WINDOW' : 'STABLE FEE'}
@@ -165,7 +168,6 @@ export default function TaxVisualizer({ feeBps }: TaxVisualizerProps) {
           </div>
         </div>
 
-        {/* Sub-label */}
         <div className="mt-6 flex flex-col items-center border-t border-white/5 pt-4 w-32">
           <span className="text-[9px] font-mono text-gray-500 uppercase">Current Trade Fee</span>
           <span className="text-[10px] font-mono text-gray-400">UNAVOIDABLE</span>
